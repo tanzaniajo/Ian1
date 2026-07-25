@@ -294,6 +294,7 @@ function updatePlaying(dt) {
 
   player.vy = Math.min(player.vy + GRAVITY * dt, TERMINAL_VY);
 
+  const prevBottom = player.y + player.h;
   moveAndCollide(player, player.vx * dt, player.vy * dt);
 
   if (player.y > level.heightPx + 64) {
@@ -307,7 +308,11 @@ function updatePlaying(dt) {
     if (en.x < en.minX) { en.x = en.minX; en.dir = 1; }
     if (en.x > en.maxX) { en.x = en.maxX; en.dir = -1; }
     if (rectsOverlap(player, en)) {
-      const stomped = player.vy > 0 && (player.y + player.h - en.y) < en.h * 0.6;
+      // A stomp is judged by where the player WAS a moment ago, not by how
+      // deep the overlap ended up — the player must have been above the
+      // enemy's head before this frame's move, otherwise a same-height
+      // walk-in reads as a landing purely by coincidence of frame timing.
+      const stomped = player.vy >= 0 && prevBottom <= en.y + 4;
       if (stomped) {
         enemies.splice(i, 1);
         player.vy = JUMP_VELOCITY * 0.6;
