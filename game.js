@@ -6,18 +6,21 @@ const TILE = 16;
 const VIEW_COLS = 24; // 384 / 16
 const VIEW_ROWS = 16; // 256 / 16
 
+// A tight, saturated 8-color set with a black field — the look of early
+// cartridge-console hardware (Fairchild Channel F) rather than a modern
+// gradient palette: everything is a flat, outlined block of one color.
 const PALETTE = {
-  sky: '#6cc7f0',
-  ground: '#8a5a2b',
-  groundTop: '#4fae4f',
-  platform: '#d9d24a',
-  player: '#e8e8f0',
-  playerDark: '#b23a3a',
-  enemy: '#b23a3a',
-  coin: '#f2d34d',
-  flagPole: '#d9d24a',
-  flagCloth: '#4fae4f',
-  text: '#0b0b12',
+  sky: '#000000',
+  ground: '#2030c8',
+  groundTop: '#20a838',
+  platform: '#d8c828',
+  player: '#e8e8e8',
+  enemy: '#d83030',
+  coin: '#d8c828',
+  flagPole: '#c8d8e0',
+  flagCloth: '#d83030',
+  text: '#e8e8e8',
+  outline: '#000000',
 };
 
 const canvas = document.getElementById('game');
@@ -397,7 +400,8 @@ function drawLevel() {
       const py = row * TILE;
       ctx.fillStyle = t === '#' ? PALETTE.groundTop : PALETTE.ground;
       ctx.fillRect(px, py, TILE, TILE);
-      ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+      ctx.strokeStyle = PALETTE.outline;
+      ctx.lineWidth = 1;
       ctx.strokeRect(px + 0.5, py + 0.5, TILE - 1, TILE - 1);
     }
   }
@@ -407,20 +411,30 @@ function drawLevel() {
     const px = flag.x - camX;
     ctx.fillStyle = PALETTE.flagPole;
     ctx.fillRect(px + 6, flag.y - 32, 3, 48);
+    ctx.strokeStyle = PALETTE.outline;
+    ctx.strokeRect(px + 6.5, flag.y - 31.5, 2, 47);
     ctx.fillStyle = PALETTE.flagCloth;
     ctx.fillRect(px + 9, flag.y - 30, 10, 8);
+    ctx.strokeRect(px + 9.5, flag.y - 29.5, 9, 7);
   }
+}
+
+function outlinedBlock(x, y, w, h, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = PALETTE.outline;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(x + 0.75, y + 0.75, w - 1.5, h - 1.5);
 }
 
 function drawEnemies() {
   for (const en of enemies) {
     const px = en.x - camX;
     if (px < -TILE || px > canvas.width) continue;
-    ctx.fillStyle = PALETTE.enemy;
-    ctx.fillRect(px, en.y, en.w, en.h);
-    ctx.fillStyle = PALETTE.text;
-    ctx.fillRect(px + 3, en.y + 4, 2, 2);
-    ctx.fillRect(px + en.w - 5, en.y + 4, 2, 2);
+    outlinedBlock(px, en.y, en.w, en.h, PALETTE.enemy);
+    // a plain inset notch instead of a face — abstract sprite blocks, not cartoon eyes
+    ctx.fillStyle = PALETTE.outline;
+    ctx.fillRect(px + en.w / 2 - 3, en.y + en.h / 2 - 1, 6, 2);
   }
 }
 
@@ -429,20 +443,16 @@ function drawCoins() {
     if (c.taken) continue;
     const px = c.x - camX;
     if (px < -TILE || px > canvas.width) continue;
-    ctx.fillStyle = PALETTE.coin;
-    ctx.beginPath();
-    ctx.arc(px + TILE / 2, c.y + TILE / 2, 5, 0, Math.PI * 2);
-    ctx.fill();
+    outlinedBlock(px + 4, c.y + 4, TILE - 8, TILE - 8, PALETTE.coin);
   }
 }
 
 function drawPlayer() {
   const px = player.x - camX;
-  ctx.fillStyle = PALETTE.player;
-  ctx.fillRect(px, player.y, player.w, player.h);
-  ctx.fillStyle = PALETTE.playerDark;
-  const eyeX = player.facing > 0 ? px + player.w - 5 : px + 2;
-  ctx.fillRect(eyeX, player.y + 3, 3, 3);
+  outlinedBlock(px, player.y, player.w, player.h, PALETTE.player);
+  ctx.fillStyle = PALETTE.outline;
+  const markX = player.facing > 0 ? px + player.w - 5 : px + 2;
+  ctx.fillRect(markX, player.y + 3, 3, 3);
 }
 
 function updateHud() {
