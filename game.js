@@ -1,26 +1,29 @@
-// BLOCK RUNNER — a chunky, low-color platformer in the spirit of early
-// cartridge-console games (Fairchild Channel F era): big blocks, a tiny
-// palette, one screen wide per level with side-scrolling.
+// BLOCK RUNNER — a warm, colorful 8-bit platformer in the spirit of the
+// Google Doodle built for Jerry Lawson: a sunny Mario-like world where you
+// run, jump, and collect circuit-board parts to build a game cartridge.
 
 const TILE = 16;
 const VIEW_COLS = 24; // 384 / 16
 const VIEW_ROWS = 16; // 256 / 16
 
-// A tight, saturated 8-color set with a black field — the look of early
-// cartridge-console hardware (Fairchild Channel F) rather than a modern
-// gradient palette: everything is a flat, outlined block of one color.
 const PALETTE = {
-  sky: '#000000',
-  ground: '#2030c8',
-  groundTop: '#20a838',
-  platform: '#d8c828',
-  player: '#e8e8e8',
-  enemy: '#d83030',
-  coin: '#d8c828',
-  flagPole: '#c8d8e0',
-  flagCloth: '#d83030',
-  text: '#e8e8e8',
-  outline: '#000000',
+  sky: '#5cc4f2',
+  cloud: '#ffffff',
+  ground: '#8a5a2b',
+  groundTop: '#4caf50',
+  platform: '#c97b3d',
+  platformMortar: '#8a5a2b',
+  skin: '#c98a54',
+  hair: '#2b1d14',
+  shirt: '#e0792c',
+  enemy: '#8a4fd1',
+  enemyDark: '#5c2fa0',
+  chipBody: '#2b2b2b',
+  chipPin: '#d8c828',
+  cartBody: '#3a3a3a',
+  cartLabel: '#e0792c',
+  text: '#1a2f1a',
+  outline: '#1a1208',
 };
 
 const canvas = document.getElementById('game');
@@ -45,9 +48,11 @@ function makeLevel({ cols, rows, groundRow, groundRanges, platforms, coins, enem
     }
   }
 
+  const platformTiles = [];
   for (const p of platforms || []) {
     for (let x = p.x; x < p.x + p.length; x++) {
       grid[p.y][x] = '#';
+      platformTiles.push({ x, y: p.y });
     }
   }
 
@@ -58,7 +63,7 @@ function makeLevel({ cols, rows, groundRow, groundRanges, platforms, coins, enem
   if (flag) grid[flag.y][flag.x] = 'F';
 
   return {
-    cols, rows, grid,
+    cols, rows, grid, platformTiles,
     widthPx: cols * TILE,
     heightPx: rows * TILE,
     enemies: (enemies || []).map(e => ({ ...e })),
@@ -340,6 +345,7 @@ function getFlagTile() {
 function draw() {
   ctx.fillStyle = PALETTE.sky;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  updateHud();
 
   if (state === STATE.TITLE) { drawTitle(); return; }
   if (state === STATE.GAME_OVER) { drawMessage('GAME OVER', `SCORE: ${score}`, 'PRESS ENTER TO RESTART'); return; }
@@ -353,22 +359,33 @@ function draw() {
   if (state === STATE.LEVEL_DONE) {
     drawBanner('LEVEL COMPLETE');
   }
+}
 
-  updateHud();
+function drawCloud(cx, cy) {
+  ctx.fillStyle = PALETTE.cloud;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 16, 8, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx + 12, cy - 4, 12, 8, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx - 12, cy - 3, 10, 7, 0, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawTitle() {
+  drawCloud(70, 40);
+  drawCloud(300, 60);
   ctx.fillStyle = PALETTE.text;
   ctx.font = '16px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('BLOCK RUNNER', canvas.width / 2, 90);
+  ctx.fillText('BLOCK RUNNER', canvas.width / 2, 100);
   ctx.font = '9px monospace';
-  ctx.fillText('a chunky retro platformer', canvas.width / 2, 110);
-  ctx.fillText('PRESS ENTER TO START', canvas.width / 2, 150);
+  ctx.fillText('build the cartridge, level by level', canvas.width / 2, 120);
+  ctx.fillText('PRESS ENTER TO START', canvas.width / 2, 160);
   ctx.textAlign = 'left';
 }
 
 function drawMessage(title, sub, hint) {
+  drawCloud(70, 40);
+  drawCloud(300, 60);
   ctx.fillStyle = PALETTE.text;
   ctx.font = '16px monospace';
   ctx.textAlign = 'center';
@@ -380,9 +397,9 @@ function drawMessage(title, sub, hint) {
 }
 
 function drawBanner(text) {
-  ctx.fillStyle = 'rgba(11,11,18,0.6)';
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
   ctx.fillRect(0, 100, canvas.width, 32);
-  ctx.fillStyle = PALETTE.coin;
+  ctx.fillStyle = PALETTE.text;
   ctx.font = '14px monospace';
   ctx.textAlign = 'center';
   ctx.fillText(text, canvas.width / 2, 122);
@@ -390,6 +407,10 @@ function drawBanner(text) {
 }
 
 function drawLevel() {
+  drawCloud(60, 30);
+  drawCloud(220, 45);
+  drawCloud(340, 25);
+
   const startCol = Math.floor(camX / TILE);
   const endCol = Math.min(level.cols - 1, startCol + VIEW_COLS + 1);
   for (let row = 0; row < level.rows; row++) {
@@ -398,24 +419,47 @@ function drawLevel() {
       if (t !== '#' && t !== '=') continue;
       const px = col * TILE - camX;
       const py = row * TILE;
-      ctx.fillStyle = t === '#' ? PALETTE.groundTop : PALETTE.ground;
-      ctx.fillRect(px, py, TILE, TILE);
+      if (t === '#') {
+        ctx.fillStyle = PALETTE.groundTop;
+        ctx.fillRect(px, py, TILE, TILE);
+      } else {
+        ctx.fillStyle = PALETTE.ground;
+        ctx.fillRect(px, py, TILE, TILE);
+      }
       ctx.strokeStyle = PALETTE.outline;
       ctx.lineWidth = 1;
       ctx.strokeRect(px + 0.5, py + 0.5, TILE - 1, TILE - 1);
     }
   }
 
+  // floating platforms get a brick pattern instead of dirt/grass, so they
+  // read as separate, jumpable blocks against the ground tiles
+  for (const p of level.platformTiles || []) {
+    const px = p.x * TILE - camX;
+    const py = p.y * TILE;
+    ctx.fillStyle = PALETTE.platform;
+    ctx.fillRect(px, py, TILE, TILE);
+    ctx.strokeStyle = PALETTE.platformMortar;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(px + 2, py + 2, TILE - 4, TILE - 4);
+    ctx.strokeStyle = PALETTE.outline;
+    ctx.strokeRect(px + 0.5, py + 0.5, TILE - 1, TILE - 1);
+  }
+
   const flag = getFlagTile();
   if (flag) {
     const px = flag.x - camX;
-    ctx.fillStyle = PALETTE.flagPole;
-    ctx.fillRect(px + 6, flag.y - 32, 3, 48);
+    const py = flag.y;
+    // a game cartridge standing on end — the level's goal is delivering it
+    ctx.fillStyle = PALETTE.cartBody;
+    ctx.fillRect(px + 2, py - 14, 12, 14);
+    ctx.fillStyle = PALETTE.cartLabel;
+    ctx.fillRect(px + 4, py - 11, 8, 5);
+    ctx.fillStyle = PALETTE.outline;
+    ctx.fillRect(px + 4, py - 16, 8, 2);
     ctx.strokeStyle = PALETTE.outline;
-    ctx.strokeRect(px + 6.5, flag.y - 31.5, 2, 47);
-    ctx.fillStyle = PALETTE.flagCloth;
-    ctx.fillRect(px + 9, flag.y - 30, 10, 8);
-    ctx.strokeRect(px + 9.5, flag.y - 29.5, 9, 7);
+    ctx.lineWidth = 1;
+    ctx.strokeRect(px + 2.5, py - 13.5, 11, 13);
   }
 }
 
@@ -431,28 +475,61 @@ function drawEnemies() {
   for (const en of enemies) {
     const px = en.x - camX;
     if (px < -TILE || px > canvas.width) continue;
-    outlinedBlock(px, en.y, en.w, en.h, PALETTE.enemy);
-    // a plain inset notch instead of a face — abstract sprite blocks, not cartoon eyes
-    ctx.fillStyle = PALETTE.outline;
-    ctx.fillRect(px + en.w / 2 - 3, en.y + en.h / 2 - 1, 6, 2);
+    const cx = px + en.w / 2;
+    const cy = en.y + en.h / 2;
+    ctx.fillStyle = PALETTE.enemy;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, en.w / 2, en.h / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = PALETTE.outline;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = PALETTE.enemyDark;
+    ctx.fillRect(px + en.w / 2 - 4, en.y + 4, 3, 3);
+    ctx.fillRect(px + en.w / 2 + 1, en.y + 4, 3, 3);
   }
 }
 
 function drawCoins() {
+  // circuit-board chips to collect, echoing the cartridge-building theme
   for (const c of coins) {
     if (c.taken) continue;
     const px = c.x - camX;
     if (px < -TILE || px > canvas.width) continue;
-    outlinedBlock(px + 4, c.y + 4, TILE - 8, TILE - 8, PALETTE.coin);
+    const bx = px + 3, by = c.y + 4, bw = TILE - 6, bh = TILE - 8;
+    ctx.fillStyle = PALETTE.chipPin;
+    for (let i = 0; i < 3; i++) {
+      const pinX = bx + 2 + i * 4;
+      ctx.fillRect(pinX, by - 2, 2, 2);
+      ctx.fillRect(pinX, by + bh, 2, 2);
+    }
+    ctx.fillStyle = PALETTE.chipBody;
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = PALETTE.outline;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
   }
 }
 
 function drawPlayer() {
   const px = player.x - camX;
-  outlinedBlock(px, player.y, player.w, player.h, PALETTE.player);
+  const py = player.y;
+  // a small Lawson-inspired sprite: shirt, skin tone, glasses, mustache, afro
+  ctx.fillStyle = PALETTE.shirt;
+  ctx.fillRect(px, py + 6, player.w, player.h - 6);
+  ctx.fillStyle = PALETTE.skin;
+  ctx.fillRect(px + 2, py + 3, player.w - 4, 6);
+  ctx.fillStyle = PALETTE.hair;
+  ctx.fillRect(px + 1, py, player.w - 2, 4);
+  ctx.fillRect(px, py + 2, 2, 3);
+  ctx.fillRect(px + player.w - 2, py + 2, 2, 3);
   ctx.fillStyle = PALETTE.outline;
-  const markX = player.facing > 0 ? px + player.w - 5 : px + 2;
-  ctx.fillRect(markX, player.y + 3, 3, 3);
+  ctx.fillRect(px + 3, py + 7, player.w - 6, 1);
+  const eyeX = player.facing > 0 ? px + player.w - 5 : px + 2;
+  ctx.fillRect(eyeX, py + 5, 2, 2);
+  ctx.strokeStyle = PALETTE.outline;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(px + 0.5, py + 0.5, player.w - 1, player.h - 1);
 }
 
 function updateHud() {
