@@ -78,12 +78,16 @@ function isSolid(level, row, col) {
   return t === '#' || t === '=';
 }
 
+// Every platform below is placed so it's reachable by a real jump: the
+// player's jump physics (JUMP_VELOCITY/GRAVITY) cap a single jump at ~3
+// tiles of rise and ~4 tiles of horizontal gap, so anything taller is
+// built as a staircase of ≤3-tile steps instead of one tall platform.
 const LEVELS = [
   makeLevel({
     cols: 40, rows: VIEW_ROWS, groundRow: 14,
     groundRanges: [[0, 14], [18, 39]],
-    platforms: [{ x: 21, y: 10, length: 4 }, { x: 30, y: 11, length: 3 }],
-    coins: [[4, 13], [8, 13], [22, 9], [23, 9], [31, 10], [35, 13], [36, 13]],
+    platforms: [{ x: 21, y: 11, length: 4 }, { x: 30, y: 11, length: 3 }],
+    coins: [[4, 13], [8, 13], [22, 10], [23, 10], [31, 10], [35, 13], [36, 13]],
     enemies: [{ x: 10 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 40 }],
     flag: { x: 38, y: 13 },
     player: { x: 1, y: 13 },
@@ -93,15 +97,15 @@ const LEVELS = [
     groundRanges: [[0, 10], [13, 20], [24, 30], [34, 47]],
     platforms: [
       { x: 15, y: 11, length: 3 },
-      { x: 26, y: 9, length: 3 },
-      { x: 37, y: 10, length: 3 },
-      { x: 41, y: 7, length: 3 },
+      { x: 26, y: 11, length: 3 },
+      { x: 37, y: 11, length: 3 },
+      { x: 40, y: 8, length: 3 },
     ],
-    coins: [[5, 13], [16, 10], [27, 8], [28, 8], [38, 9], [42, 6], [43, 6], [45, 13]],
+    coins: [[5, 13], [16, 10], [27, 10], [28, 10], [38, 10], [41, 7], [42, 7], [45, 13]],
     enemies: [
       { x: 14 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 55 },
       { x: 25 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 55 },
-      { x: 41 * TILE, y: 6 * TILE, w: 14, h: 14, speed: 45 },
+      { x: 36 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 45 },
     ],
     flag: { x: 46, y: 13 },
     player: { x: 1, y: 13 },
@@ -110,21 +114,173 @@ const LEVELS = [
     cols: 56, rows: VIEW_ROWS, groundRow: 14,
     groundRanges: [[0, 8], [11, 15], [19, 22], [26, 29], [33, 38], [42, 55]],
     platforms: [
-      { x: 12, y: 10, length: 2 },
+      { x: 12, y: 11, length: 3 },
       { x: 20, y: 11, length: 2 },
-      { x: 27, y: 9, length: 2 },
-      { x: 34, y: 8, length: 2 },
+      { x: 27, y: 11, length: 2 },
+      { x: 29, y: 8, length: 2 },
+      { x: 34, y: 11, length: 2 },
+      { x: 36, y: 8, length: 2 },
       { x: 44, y: 11, length: 3 },
       { x: 49, y: 8, length: 3 },
     ],
-    coins: [[4, 13], [12, 9], [20, 10], [27, 8], [34, 7], [45, 10], [50, 7], [51, 7], [53, 13]],
+    coins: [[13, 10], [20, 10], [27, 10], [29, 7], [34, 10], [36, 7], [45, 10], [50, 7], [51, 7], [4, 13], [53, 13]],
     enemies: [
       { x: 3 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 60 },
-      { x: 12 * TILE, y: 9 * TILE, w: 14, h: 14, speed: 50 },
-      { x: 27 * TILE, y: 8 * TILE, w: 14, h: 14, speed: 50 },
+      { x: 13 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 50 },
+      { x: 28 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 50 },
       { x: 45 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 65 },
     ],
     flag: { x: 54, y: 13 },
+    player: { x: 1, y: 13 },
+  }),
+  makeLevel({
+    cols: 60, rows: VIEW_ROWS, groundRow: 14,
+    groundRanges: [[0, 9], [12, 17], [21, 26], [30, 37], [41, 48], [52, 59]],
+    platforms: [
+      { x: 13, y: 11, length: 3 },
+      { x: 22, y: 11, length: 3 },
+      { x: 25, y: 8, length: 2 },
+      { x: 31, y: 11, length: 3 },
+      { x: 42, y: 11, length: 3 },
+      { x: 45, y: 8, length: 2 },
+      { x: 53, y: 11, length: 3 },
+    ],
+    coins: [[14, 10], [15, 10], [23, 10], [25, 7], [26, 7], [32, 10], [43, 10], [45, 7], [46, 7], [54, 10], [55, 10], [4, 13], [35, 13], [57, 13]],
+    enemies: [
+      { x: 4 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 60 },
+      { x: 14 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 50 },
+      { x: 23 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 65 },
+      { x: 32 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 55 },
+      { x: 53 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 70 },
+    ],
+    flag: { x: 58, y: 13 },
+    player: { x: 1, y: 13 },
+  }),
+  makeLevel({
+    cols: 66, rows: VIEW_ROWS, groundRow: 14,
+    groundRanges: [[0, 9], [12, 16], [20, 25], [29, 34], [38, 45], [49, 56], [60, 65]],
+    platforms: [
+      { x: 13, y: 11, length: 3 },
+      { x: 21, y: 11, length: 3 },
+      { x: 24, y: 8, length: 2 },
+      { x: 30, y: 11, length: 3 },
+      { x: 39, y: 11, length: 3 },
+      { x: 42, y: 8, length: 2 },
+      { x: 45, y: 5, length: 2 },
+      { x: 50, y: 11, length: 3 },
+      { x: 61, y: 11, length: 3 },
+    ],
+    coins: [[14, 10], [22, 10], [24, 7], [31, 10], [32, 10], [40, 10], [42, 7], [43, 7], [45, 4], [51, 10], [52, 10], [62, 10], [4, 13], [54, 13], [63, 13]],
+    enemies: [
+      { x: 4 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 65 },
+      { x: 14 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 55 },
+      { x: 22 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 70 },
+      { x: 31 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 60 },
+      { x: 40 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 75 },
+      { x: 51 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 60 },
+      { x: 62 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 80 },
+    ],
+    flag: { x: 64, y: 13 },
+    player: { x: 1, y: 13 },
+  }),
+  makeLevel({
+    cols: 72, rows: VIEW_ROWS, groundRow: 14,
+    groundRanges: [[0, 8], [11, 15], [19, 24], [28, 33], [37, 42], [46, 53], [57, 62], [66, 71]],
+    platforms: [
+      { x: 12, y: 11, length: 3 },
+      { x: 20, y: 11, length: 3 },
+      { x: 23, y: 8, length: 2 },
+      { x: 29, y: 11, length: 3 },
+      { x: 38, y: 11, length: 3 },
+      { x: 41, y: 8, length: 2 },
+      { x: 47, y: 11, length: 3 },
+      { x: 50, y: 8, length: 2 },
+      { x: 58, y: 11, length: 3 },
+      { x: 67, y: 11, length: 3 },
+    ],
+    coins: [[13, 10], [21, 10], [23, 7], [30, 10], [31, 10], [39, 10], [41, 7], [42, 7], [48, 10], [50, 7], [59, 10], [60, 10], [68, 10], [4, 13], [69, 13]],
+    enemies: [
+      { x: 4 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 65 },
+      { x: 13 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 55 },
+      { x: 21 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 70 },
+      { x: 30 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 60 },
+      { x: 39 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 75 },
+      { x: 48 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 65 },
+      { x: 59 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 80 },
+      { x: 68 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 65 },
+    ],
+    flag: { x: 70, y: 13 },
+    player: { x: 1, y: 13 },
+  }),
+  makeLevel({
+    cols: 80, rows: VIEW_ROWS, groundRow: 14,
+    groundRanges: [[0, 8], [11, 15], [19, 24], [28, 33], [37, 42], [46, 51], [55, 60], [64, 69], [73, 79]],
+    platforms: [
+      { x: 12, y: 11, length: 3 },
+      { x: 20, y: 11, length: 3 },
+      { x: 23, y: 8, length: 2 },
+      { x: 29, y: 11, length: 3 },
+      { x: 38, y: 11, length: 3 },
+      { x: 41, y: 8, length: 2 },
+      { x: 44, y: 5, length: 2 },
+      { x: 47, y: 11, length: 3 },
+      { x: 56, y: 11, length: 3 },
+      { x: 59, y: 8, length: 2 },
+      { x: 65, y: 11, length: 3 },
+      { x: 74, y: 11, length: 3 },
+    ],
+    coins: [[13, 10], [21, 10], [23, 7], [30, 10], [31, 10], [39, 10], [41, 7], [44, 4], [48, 10], [57, 10], [59, 7], [60, 7], [66, 10], [67, 10], [75, 10], [4, 13], [76, 13]],
+    enemies: [
+      { x: 4 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 70 },
+      { x: 13 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 60 },
+      { x: 21 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 75 },
+      { x: 30 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 65 },
+      { x: 39 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 80 },
+      { x: 48 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 65 },
+      { x: 57 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 70 },
+      { x: 66 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 85 },
+      { x: 75 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 70 },
+    ],
+    flag: { x: 77, y: 13 },
+    player: { x: 1, y: 13 },
+  }),
+  makeLevel({
+    cols: 88, rows: VIEW_ROWS, groundRow: 14,
+    groundRanges: [[0, 8], [11, 15], [19, 24], [28, 33], [37, 42], [46, 51], [55, 60], [64, 69], [73, 78], [82, 87]],
+    platforms: [
+      { x: 12, y: 11, length: 3 },
+      { x: 20, y: 11, length: 3 },
+      { x: 23, y: 8, length: 2 },
+      { x: 29, y: 11, length: 3 },
+      { x: 38, y: 11, length: 3 },
+      { x: 41, y: 8, length: 2 },
+      { x: 44, y: 5, length: 2 },
+      { x: 47, y: 11, length: 3 },
+      { x: 56, y: 11, length: 3 },
+      { x: 59, y: 8, length: 2 },
+      { x: 65, y: 11, length: 3 },
+      { x: 68, y: 8, length: 2 },
+      { x: 74, y: 11, length: 3 },
+      { x: 83, y: 11, length: 3 },
+    ],
+    coins: [
+      [13, 10], [21, 10], [23, 7], [30, 10], [31, 10], [39, 10], [41, 7], [44, 4],
+      [48, 10], [57, 10], [59, 7], [60, 7], [66, 10], [68, 7], [75, 10], [76, 10],
+      [84, 10], [85, 10], [4, 13], [76, 13],
+    ],
+    enemies: [
+      { x: 4 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 70 },
+      { x: 13 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 60 },
+      { x: 21 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 75 },
+      { x: 30 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 65 },
+      { x: 39 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 80 },
+      { x: 48 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 65 },
+      { x: 57 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 70 },
+      { x: 66 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 85 },
+      { x: 75 * TILE, y: 10 * TILE, w: 14, h: 14, speed: 75 },
+      { x: 84 * TILE, y: 13 * TILE, w: 14, h: 14, speed: 90 },
+    ],
+    flag: { x: 86, y: 13 },
     player: { x: 1, y: 13 },
   }),
 ];
@@ -146,6 +302,11 @@ const GRAVITY = 900;
 const JUMP_VELOCITY = -330;
 const MOVE_SPEED = 110;
 const TERMINAL_VY = 500;
+// The bounce after stomping an enemy should clear one extra tile of height
+// compared to the base 0.6x bounce, computed from the height formula
+// (v^2 / 2g) so it stays correct if the base jump ever changes.
+const BASE_STOMP_HEIGHT = ((JUMP_VELOCITY * 0.6) ** 2) / (2 * GRAVITY);
+const STOMP_BOUNCE_VELOCITY = -Math.sqrt(2 * GRAVITY * (BASE_STOMP_HEIGHT + TILE));
 
 let player, level, enemies, coins;
 
@@ -315,7 +476,7 @@ function updatePlaying(dt) {
       const stomped = player.vy >= 0 && prevBottom <= en.y + 4;
       if (stomped) {
         enemies.splice(i, 1);
-        player.vy = JUMP_VELOCITY * 0.6;
+        player.vy = STOMP_BOUNCE_VELOCITY;
         score += 20;
       } else {
         killPlayer();
