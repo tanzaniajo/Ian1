@@ -301,13 +301,21 @@ function updatePlaying(dt) {
     return;
   }
 
-  for (const en of enemies) {
+  for (let i = enemies.length - 1; i >= 0; i--) {
+    const en = enemies[i];
     en.x += en.dir * en.speed * dt;
     if (en.x < en.minX) { en.x = en.minX; en.dir = 1; }
     if (en.x > en.maxX) { en.x = en.maxX; en.dir = -1; }
     if (rectsOverlap(player, en)) {
-      killPlayer();
-      return;
+      const stomped = player.vy > 0 && (player.y + player.h - en.y) < en.h * 0.6;
+      if (stomped) {
+        enemies.splice(i, 1);
+        player.vy = JUMP_VELOCITY * 0.6;
+        score += 20;
+      } else {
+        killPlayer();
+        return;
+      }
     }
   }
 
