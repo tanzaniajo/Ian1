@@ -13,9 +13,10 @@ const PALETTE = {
   groundTop: '#4caf50',
   platform: '#c97b3d',
   platformMortar: '#8a5a2b',
-  skin: '#c98a54',
-  hair: '#2b1d14',
-  shirt: '#e0792c',
+  skin: '#8a5a34',
+  hair: '#1c1712',
+  jacket: '#3d7dc9',
+  pants: '#6b4a2a',
   enemy: '#8a4fd1',
   enemyDark: '#5c2fa0',
   chipBody: '#2b2b2b',
@@ -688,22 +689,32 @@ function drawCoins() {
 function drawPlayer() {
   const px = player.x - camX;
   const py = player.y;
-  // a small Lawson-inspired sprite: shirt, skin tone, glasses, mustache, afro
-  ctx.fillStyle = PALETTE.shirt;
-  ctx.fillRect(px, py + 6, player.w, player.h - 6);
-  ctx.fillStyle = PALETTE.skin;
-  ctx.fillRect(px + 2, py + 3, player.w - 4, 6);
-  ctx.fillStyle = PALETTE.hair;
-  ctx.fillRect(px + 1, py, player.w - 2, 4);
-  ctx.fillRect(px, py + 2, 2, 3);
-  ctx.fillRect(px + player.w - 2, py + 2, 2, 3);
+  const w = player.w, h = player.h;
+  // Lawson's own Doodle-badge look: dark cropped hair, brown skin, a blue
+  // jacket, and tan pants, stacked head-to-toe in flat pixel blocks.
+  ctx.fillStyle = PALETTE.pants;
+  ctx.fillRect(px + 1, py + h * 0.73, w - 2, h * 0.27);
   ctx.fillStyle = PALETTE.outline;
-  ctx.fillRect(px + 3, py + 7, player.w - 6, 1);
-  const eyeX = player.facing > 0 ? px + player.w - 5 : px + 2;
-  ctx.fillRect(eyeX, py + 5, 2, 2);
+  ctx.fillRect(px + w / 2 - 0.5, py + h * 0.73, 1, h * 0.27);
+
+  ctx.fillStyle = PALETTE.jacket;
+  ctx.fillRect(px, py + h * 0.4, w, h * 0.35);
+
+  ctx.fillStyle = PALETTE.skin;
+  ctx.fillRect(px + 2, py + h * 0.2, w - 4, h * 0.22);
+
+  ctx.fillStyle = PALETTE.hair;
+  ctx.fillRect(px + 1, py, w - 2, h * 0.2);
+  ctx.fillRect(px, py + h * 0.13, 2, h * 0.13);
+  ctx.fillRect(px + w - 2, py + h * 0.13, 2, h * 0.13);
+
+  ctx.fillStyle = PALETTE.outline;
+  const eyeX = player.facing > 0 ? px + w - 5 : px + 3;
+  ctx.fillRect(eyeX, py + h * 0.3, 2, 2);
+
   ctx.strokeStyle = PALETTE.outline;
   ctx.lineWidth = 1;
-  ctx.strokeRect(px + 0.5, py + 0.5, player.w - 1, player.h - 1);
+  ctx.strokeRect(px + 0.5, py + 0.5, w - 1, h - 1);
 }
 
 function updateHud() {
